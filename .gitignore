@@ -1,0 +1,31 @@
+# Byte-compiled / cache / logs
+__pycache__/
+*.py[cod]
+*.log
+
+# Virtual environment
+venv/
+.env/
+.env*/
+.venv/ 
+
+# IDEs
+.vscode/
+*.code-workspace
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração pessoais
+*.env
+*.ini
+*.local
+
+# Arquivos do OneDrive
+~$*
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Arquivos

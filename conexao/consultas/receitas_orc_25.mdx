@@ -1,0 +1,28 @@
+WITH 
+    MEMBER Measures.ValorAjustado AS 
+        [Measures].[Valor de Receita Iniciativa Orçado - Ajustado]
+
+SELECT
+    NON EMPTY { Measures.ValorAjustado } ON COLUMNS,
+    NON EMPTY
+        FILTER(
+            NONEMPTY(
+                [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS *
+                [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS *
+                [Natureza Orçamentária].[Código Estruturado 4 nível].[Código Estruturado 4 nível].MEMBERS *
+                [Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].MEMBERS *
+                [Tempo].[Ano].[Número Ano].MEMBERS,
+                Measures.ValorAjustado
+            ),
+            Measures.ValorAjustado > 0
+        ) ON ROWS
+FROM 
+    [FINANCEIRO]
+WHERE 
+    (
+        [Sebrae].[Sebrae].[Descrição de Sebrae].&[26],
+        {
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202501] :
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202512]
+        }
+    )
