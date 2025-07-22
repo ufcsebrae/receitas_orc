@@ -22,5 +22,12 @@ consultas: Dict[str, Consulta] = {
         tipo="mdx",
         sql=carregar_sql("conexao/consultas/receitas_orc_25.mdx"),
         conexao="OLAP_SME"
+        ),
+
+    "cc": Consulta(
+        titulo="Centro de Custo",
+        tipo="sql",
+        sql=carregar_sql("conexao/consultas/cc.sql"),
+        conexao="SPSVSQL39_HubDados"
         )
 }

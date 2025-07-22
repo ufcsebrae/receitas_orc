@@ -1,14 +1,14 @@
 CONEXOES = {
-    "SPSVSQL39": {
+    "SPSVSQL39_FINANCA": {
         "tipo": "sql",
-        "servidor": "spsvsql39\\metas",
+        "servidor": "spsvsql39",
         "banco": "FINANCA",
         "driver": "ODBC+Driver+17+for+SQL+Server",
         "trusted_connection": True
     },
-        "SPSVSQL39_HubDados": {
+    "SPSVSQL39_HubDados": {
         "tipo": "sql",
-        "servidor": "spsvsql39\\metas",
+        "servidor": "spsvsql39",
         "banco": "HubDados",
         "driver": "ODBC+Driver+17+for+SQL+Server",
         "trusted_connection": True

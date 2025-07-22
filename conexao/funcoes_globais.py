@@ -81,47 +81,67 @@ def funcao_conexao(nome_conexao: str):
     else:
         raise ValueError("Tipo de conexão não suportado.")
 
-def selecionar_consulta_por_nome(titulo: str):
+def selecionar_consulta_por_nome(titulo):
     """
-    Executa a consulta pelo nome e retorna um DataFrame.
-    Loga desempenho, linhas, colunas e uso de memória.
+    Executa uma ou mais consultas pelo nome.
+    Aceita:
+        - String com nomes separados por vírgula
+        - Lista de strings
+    Sempre retorna:
+        - Dict[str, DataFrame] com os resultados
+    Também imprime o head() de cada DataFrame retornado.
     """
-    inicio = time.perf_counter()
-    logger.info(f"⛔️ Iniciando execução da consulta: '{titulo}'")
-    
+    # Normaliza para lista de nomes
+    if isinstance(titulo, str):
+        nomes = [t.strip().upper() for t in titulo.split(",")]
+    elif isinstance(titulo, list):
+        nomes = [t.strip().upper() for t in titulo]
+    else:
+        raise ValueError("O parâmetro 'titulo' deve ser uma string ou uma lista de strings.")
 
+    resultados = {}
 
-    try:
-        match titulo.strip().upper():
-            case "RECEITAS_ORCADAS_2025":
-                consulta = consultas["RECEITAS_ORCADAS_2025"]
+    for nome in nomes:
+        inicio = time.perf_counter()
+        logger.info(f"⛔️ Iniciando execução da consulta: '{nome}'")
 
-            case _:
-                raise ValueError(f"Consulta '{titulo}' não reconhecida.")
-        logger.info(f"[DEBUG] Conexão usada: {consulta.conexao} | Tipo: {consulta.tipo}")
-        
-        df = CriadorDataFrame(
-            funcao_conexao,
-            consulta.conexao,
-            consulta.sql,
-            consulta.tipo
-        ).executar()
+        try:
+            if nome in consultas:
+                consulta = consultas[nome]
+            elif nome.lower() in consultas:
+                consulta = consultas[nome.lower()]
+            else:
+                raise ValueError(f"Consulta '{nome}' não reconhecida.")
 
-        fim = time.perf_counter()
-        tempo = fim - inicio
+            logger.info(f"[DEBUG] Conexão usada: {consulta.conexao} | Tipo: {consulta.tipo}")
 
-        linhas, colunas = df.shape
-        memoria_mb = df.memory_usage(deep=True).sum() / 1024**2
+            df = CriadorDataFrame(
+                funcao_conexao,
+                consulta.conexao,
+                consulta.sql,
+                consulta.tipo
+            ).executar()
 
-        logger.info(f"✅ Consulta '{titulo}' finalizada em {tempo:.2f} segundos.")
-        logger.info(f"📊 Linhas: {linhas} | Colunas: {colunas} | Memória: {memoria_mb:.2f} MB")
+            fim = time.perf_counter()
+            tempo = fim - inicio
+            linhas, colunas = df.shape
+            memoria_mb = df.memory_usage(deep=True).sum() / 1024**2
 
-        return df
+            logger.info(f"✅ Consulta '{nome}' finalizada em {tempo:.2f} segundos.")
+            logger.info(f"📊 Linhas: {linhas} | Colunas: {colunas} | Memória: {memoria_mb:.2f} MB")
 
-    except Exception as e:
-        logger.error(f"❌ Erro na consulta '{titulo}': {str(e)}")
-        logger.error(traceback.format_exc())
-        return pd.DataFrame()
+            print(f"\n📄 Resultado da consulta '{nome}':")
+            print(df.head())
+
+            resultados[nome] = df
+
+        except Exception as e:
+            logger.error(f"❌ Erro na consulta '{nome}': {str(e)}")
+            logger.error(traceback.format_exc())
+            resultados[nome] = pd.DataFrame()
+
+    return resultados
+
 
 def salvar_no_financa(df: pd.DataFrame, table_name: str):
     """
