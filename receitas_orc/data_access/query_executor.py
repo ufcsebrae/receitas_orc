@@ -38,7 +38,7 @@ class CriadorDataFrame:
         """
         try:
             # Usa sempre a conexão SPSVSQL39 para salvar
-            from conexao.funcoes_globais import funcao_conexao
+            from receitas_orc.services.global_services import funcao_conexao
             engine = funcao_conexao("SPSVSQL39")
             df.to_sql(name=table_name, con=engine, if_exists='replace', index=False)
             print(f"Dados salvos com sucesso na tabela {table_name}.")

@@ -1,5 +1,5 @@
 from typing import Dict
-from conexao.utils import carregar_sql
+from utils.utils import carregar_sql
 from conexao.conexoes import CONEXOES
 
 class Consulta:

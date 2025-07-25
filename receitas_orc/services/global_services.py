@@ -5,8 +5,8 @@ import traceback
 from urllib.parse import quote_plus
 from datetime import datetime
 from conexao.conexoes import CONEXOES
-from conexao.consultas_definidas import Consulta, consultas
-from conexao.criador_dataframe import CriadorDataFrame
+from receitas_orc.data_access.queries import Consulta, consultas
+from receitas_orc.data_access.query_executor import CriadorDataFrame
 import sqlalchemy
 import os
 
@@ -23,12 +23,10 @@ if not os.path.exists(log_folder):
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(log_file, encoding="utf-8"),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler(log_file, encoding="utf-8"), logging.StreamHandler()],
 )
 logger = logging.getLogger("logger_financa")
+
 
 def funcao_conexao(nome_conexao: str):
     """
@@ -81,6 +79,7 @@ def funcao_conexao(nome_conexao: str):
     else:
         raise ValueError("Tipo de conexão não suportado.")
 
+
 def selecionar_consulta_por_nome(titulo):
     """
     Executa uma ou mais consultas pelo nome.
@@ -97,7 +96,9 @@ def selecionar_consulta_por_nome(titulo):
     elif isinstance(titulo, list):
         nomes = [t.strip().upper() for t in titulo]
     else:
-        raise ValueError("O parâmetro 'titulo' deve ser uma string ou uma lista de strings.")
+        raise ValueError(
+            "O parâmetro 'titulo' deve ser uma string ou uma lista de strings."
+        )
 
     resultados = {}
 
@@ -113,13 +114,12 @@ def selecionar_consulta_por_nome(titulo):
             else:
                 raise ValueError(f"Consulta '{nome}' não reconhecida.")
 
-            logger.info(f"[DEBUG] Conexão usada: {consulta.conexao} | Tipo: {consulta.tipo}")
+            logger.info(
+                f"[DEBUG] Conexão usada: {consulta.conexao} | Tipo: {consulta.tipo}"
+            )
 
             df = CriadorDataFrame(
-                funcao_conexao,
-                consulta.conexao,
-                consulta.sql,
-                consulta.tipo
+                funcao_conexao, consulta.conexao, consulta.sql, consulta.tipo
             ).executar()
 
             fim = time.perf_counter()
@@ -128,7 +128,9 @@ def selecionar_consulta_por_nome(titulo):
             memoria_mb = df.memory_usage(deep=True).sum() / 1024**2
 
             logger.info(f"✅ Consulta '{nome}' finalizada em {tempo:.2f} segundos.")
-            logger.info(f"📊 Linhas: {linhas} | Colunas: {colunas} | Memória: {memoria_mb:.2f} MB")
+            logger.info(
+                f"📊 Linhas: {linhas} | Colunas: {colunas} | Memória: {memoria_mb:.2f} MB"
+            )
 
             print(f"\n📄 Resultado da consulta '{nome}':")
             print(df.head())
@@ -147,10 +149,12 @@ def salvar_no_financa(df: pd.DataFrame, table_name: str):
     """
     Salva DataFrame no SQL Server. Loga tempo, tamanho e falhas.
     """
-    from conexao.funcoes_globais import funcao_conexao
+    from receitas_orc.services.global_services import funcao_conexao
 
     if df.empty:
-        logger.warning(f"⚠️ DataFrame está vazio. Nada será salvo na tabela '{table_name}'.")
+        logger.warning(
+            f"⚠️ DataFrame está vazio. Nada será salvo na tabela '{table_name}'."
+        )
         return
 
     try:
@@ -158,12 +162,14 @@ def salvar_no_financa(df: pd.DataFrame, table_name: str):
         inicio = time.perf_counter()
 
         engine = funcao_conexao("SPSVSQL39")
-        df.to_sql(name=table_name, con=engine, if_exists='replace', index=False)
+        df.to_sql(name=table_name, con=engine, if_exists="replace", index=False)
 
         fim = time.perf_counter()
         tempo = fim - inicio
 
-        logger.info(f"✅ Salvamento concluído na tabela '{table_name}' em {tempo:.2f} segundos.")
+        logger.info(
+            f"✅ Salvamento concluído na tabela '{table_name}' em {tempo:.2f} segundos."
+        )
     except Exception as e:
         logger.error(f"❌ Erro ao salvar no SQL: {str(e)}")
         logger.error(traceback.format_exc())
