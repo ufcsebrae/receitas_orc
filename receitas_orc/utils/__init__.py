@@ -1,1 +1,1 @@
-from .utils import carregar_sql
+from .sql_utils import carregar_sql

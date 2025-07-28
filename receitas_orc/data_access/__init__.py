@@ -1,2 +1,2 @@
-from receitas_orc.data_access.queries import consultas
-from receitas_orc.data_access.query_executor import CriadorDataFrame
+from .queries import consultas
+from .query_executor import CriadorDataFrame

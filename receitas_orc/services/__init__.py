@@ -1,2 +1,2 @@
-from receitas_orc.services.dataframe_processing import filtrar_df
-from receitas_orc.services.global_services import funcao_conexao
+from .dataframe_processing import filtrar_df
+from .global_services import funcao_conexao

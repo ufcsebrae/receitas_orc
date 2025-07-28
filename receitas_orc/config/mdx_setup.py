@@ -1,17 +1,24 @@
 import os
-import sys
+import clr
 
-def setup_mdx_environment(dll_path=r"C:\Microsoft.AnalysisServices.AdomdClient.dll"):
+def setup_mdx_environment(dll_path):
     """
     Configura o ambiente para uso do Pyadomd com a DLL do Analysis Services.
     """
-    dll_dir = os.path.dirname(dll_path)
-    os.environ["PATH"] = dll_dir + os.pathsep + os.environ.get("PATH", "")
-    if dll_dir not in sys.path:
-        sys.path.append(dll_dir)
+    if not os.path.exists(dll_path):
+        raise FileNotFoundError(f"❌ DLL não encontrada em: {dll_path}")
 
-    import clr
+    dll_dir = os.path.dirname(dll_path)
+
+    # Garante que o diretório da DLL está no PATH do sistema
+    os.environ["PATH"] = dll_dir + os.pathsep + os.environ.get("PATH", "")
+    if dll_dir not in os.sys.path:
+        os.sys.path.append(dll_dir)
+
+    # Adiciona referência à DLL e importa os componentes necessários
     clr.AddReference(dll_path)
-    # Importação do Pyadomd pode ser feita após a configuração
+
+    from Microsoft.AnalysisServices.AdomdClient import AdomdConnection
     from pyadomd import Pyadomd
-    return Pyadomd
+
+    return AdomdConnection, Pyadomd
