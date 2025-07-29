@@ -1,7 +1,7 @@
 import os
 from typing import Dict
-from utils.sql_utils import carregar_sql
-from config.config_connections import CONEXOES
+from receitas_orc.utils.sql_utils import carregar_sql
+from receitas_orc.config.config_connections import CONEXOES
 
 SQL_DIR = os.path.join(os.path.dirname(__file__), '..', 'config', 'sql')
 

@@ -3,15 +3,16 @@ import time
 import pandas as pd
 import traceback
 
+from receitas_orc.config.mdx_setup import setup_mdx_environment
 from urllib.parse import quote_plus
 from datetime import datetime
-from data_access.queries import CONEXOES
-from data_access.queries import Consulta, consultas
-from data_access.query_executor import CriadorDataFrame
+from receitas_orc.data_access.queries import CONEXOES
+from receitas_orc.data_access.queries import Consulta, consultas
+from receitas_orc.data_access.query_executor import CriadorDataFrame
 import sqlalchemy
 import os
 
-from config.mdx_setup import setup_mdx_environment
+
 dll_path = r"C:\Microsoft.AnalysisServices.AdomdClient.dll"
 setup_mdx_environment(dll_path)
 

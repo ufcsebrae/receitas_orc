@@ -23,5 +23,12 @@ CONEXOES = {
         "banco": "DatamartMeta",
         "driver": "ODBC+Driver+17+for+SQL+Server",
         "authentication": "ActiveDirectoryInteractive"
-    }   
+    },
+    "default" : {
+    "tipo": "sql",
+    "servidor": "localhost",
+    "banco": "master",
+    "driver": "ODBC Driver 17 for SQL Server",
+    "trusted_connection": True
+}   
 }
