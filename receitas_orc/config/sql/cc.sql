@@ -1,9 +1,9 @@
 SELECT DISTINCT
-    A.CODCCUSTO,
-    Nivel2.CODCCUSTO AS Nivel2_Cod,
-    Nivel2.NOME       AS Nivel2_Nome,
-    Nivel1.NOME       AS Nivel1_Nome,
-    A.NOME            AS Nivel3_Nome
+    A.CODCCUSTO AS CC,
+    Nivel2.CODCCUSTO AS CC_NVL2,
+    Nivel2.CAMPOLIVRE       AS ACAO,
+    Nivel1.CAMPOLIVRE       AS PROJETO,
+    A.CAMPOLIVRE            AS UNIDADE
 
 FROM CorporeRM.GCCUSTO A
 

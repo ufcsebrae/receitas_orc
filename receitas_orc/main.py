@@ -1,52 +1,110 @@
-import os
-from receitas_orc.config.startup import AdomdConnection, Pyadomd
+"""
+main.py
+
+Este é o ponto de entrada principal para o pipeline de processamento de
+receitas orçamentárias. Ele orquestra a execução do pipeline chamando
+os serviços apropriados em uma sequência lógica.
+"""
+import logging
+import pandas as pd
+import numpy as np
+
+# Importações do seu projeto
 from receitas_orc.config.mdx_setup import setup_mdx_environment
-from receitas_orc.config.config_connections import CONEXOES
-from receitas_orc.services.global_services import selecionar_consulta_por_nome, salvar_no_financa
-from receitas_orc.services.dataframe_processing import filtrar_df
+from receitas_orc.services.global_services import selecionar_consulta_por_nome
+from receitas_orc.services.dataframe_processing import renomear_colunas_padrao
+from receitas_orc.services import pipeline_service
 
+# --- Configurações Globais ---
+# ATENÇÃO: Substitua pelo caminho EXATO e REAL da sua DLL.
+# Use o método "Shift + Botão Direito > Copiar como caminho" para obter o caminho.
+DLL_PATH = r"C:\Microsoft.AnalysisServices.AdomdClient.dll"
+RESULT_FILE_NAME = "resultado_pipeline.xlsx"
 
-def carregar_dados():
-    """Faz a seleção das consultas necessárias."""
-    return selecionar_consulta_por_nome("RECEITAS_ORCADAS_2025, cc")
-
-
-def tratar_dados(df_receitas):
-    """
-    Trata os dados de receitas, aplicando filtro por mês.
-
-    Se a variável de ambiente MES_INPUT estiver definida, ela será usada.
-    Caso contrário, solicita via input.
-    """
-    try:
-        mes_input = int(os.getenv("MES_INPUT", input("\n🔸 Digite o número do mês desejado (0–12): ")))
-    except (ValueError, EOFError):
-        print("[ERRO] Mês inválido ou entrada não fornecida.")
-        return df_receitas  # ou retorne None para abortar
-
-    return filtrar_df(df_receitas, mes_input=mes_input)
+# --- Configuração de Logging ---
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def executar_pipeline():
-    """Executa o pipeline principal."""
-    resultados = carregar_dados()
-
+    """Orquestra a execução do pipeline de dados."""
+    logger.info("🚀 Iniciando pipeline de execução...")
+    
     try:
-        input("\n[INFO] Pressione ENTER para continuar com o filtro e o tratamento de dados...\n")
-    except EOFError:
-        print("[INFO] Entrada ignorada (modo não interativo)")
+        setup_mdx_environment(DLL_PATH)
+        logger.info("Ambiente MDX inicializado com sucesso.")
+    except Exception as e:
+        logger.error(f"❌ Falha crítica ao inicializar ambiente MDX: {e}", exc_info=True)
+        return
 
-    df_receitas = resultados.get("RECEITAS_ORCADAS_2025")
-    if df_receitas is not None:
-        df_filtrado = tratar_dados(df_receitas)
-        # salvar_no_financa(df_filtrado, "RECEITAS")  # Descomente se necessário
+    # Etapa 1: Carregar e preparar dados brutos
+    logger.info("--- Etapa 1: Carregando dados brutos ---")
+    resultados = selecionar_consulta_por_nome("RECEITAS_ORCADAS_2025, cc, acoes, FatoFechamento")
+    df_orcadas = resultados.get("RECEITAS_ORCADAS_2025")
+    df_acoes = resultados.get("acoes")
+    df_cc = resultados.get("cc")
+    df_FatoFechamento = resultados.get("FatoFechamento")
+    
+    if any(df is None or df.empty for df in [df_orcadas, df_acoes, df_cc]):
+        logger.error("Falha ao carregar DataFrames essenciais (orcadas, acoes, cc). Encerrando.")
+        return
+
+    logger.info("Renomeando colunas...")
+    df_orcadas = renomear_colunas_padrao(df_orcadas)
+    df_acoes = renomear_colunas_padrao(df_acoes)
+    df_cc = renomear_colunas_padrao(df_cc)
+    if df_FatoFechamento is not None:
+        # A nova consulta SQL para FatoFechamento já define os nomes corretos,
+        # então a renomeação pode não ser mais necessária para ele.
+        # df_FatoFechamento = renomear_colunas_padrao(df_FatoFechamento)
+        pass
+
+
+    # Etapa 2: Obter o mês do usuário
+    logger.info("--- Etapa 2: Obtendo mês de referência ---")
+    mes_selecionado = pipeline_service.obter_mes_do_usuario()
+    if mes_selecionado is None:
+        logger.warning("Nenhum mês válido selecionado. Encerrando o pipeline.")
+        return
+
+    # Etapa 3: Filtrar os dados de origem pelo mês selecionado
+    logger.info(f"--- Etapa 3: Filtrando dados para o mês {mes_selecionado} ---")
+    df_despesas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_acoes, mes_selecionado, "Despesas")
+    df_receitas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_orcadas, mes_selecionado, "Receitas")
+    
+    df_fechamento_do_mes = pd.DataFrame() # Inicia vazio
+    if df_FatoFechamento is not None and not df_FatoFechamento.empty:
+        # A função de filtro precisa ser ajustada para a coluna 'DATA' de FatoFechamento
+        logger.info(f"Filtrando 'FatoFechamento' pela coluna 'DATA' para o mês: {mes_selecionado}")
+        df_FatoFechamento['DATA'] = pd.to_datetime(df_FatoFechamento['DATA'], errors='coerce')
+        df_fechamento_do_mes = df_FatoFechamento[df_FatoFechamento['DATA'].dt.month == mes_selecionado]
     else:
-        print("[ERRO] Consulta 'RECEITAS_ORCADAS_2025' não retornou dados.")
+        logger.warning("'FatoFechamento' não foi carregado ou está vazio. Pulando esta etapa.")
 
+    # Etapa 4: Processar os dados já filtrados
+    logger.info("--- Etapa 4: Processando e juntando dados ---")
+    df_acoes_agg = pipeline_service.agregar_despesas_por_acao(df_despesas_do_mes)
+    df_acoes_ranqueadas = pipeline_service.ranquear_acoes_e_juntar_cc(df_acoes_agg, df_cc)
+    
+    # Junta com receitas e fechamento ANTES de apropriar a receita
+    df_com_receitas = pipeline_service.juntar_com_receitas(df_acoes_ranqueadas, df_receitas_do_mes)
+    df_intermediario = pipeline_service.juntar_com_fato_fechamento(df_com_receitas, df_fechamento_do_mes)
+
+    # Etapa 5: Aplicar regra de negócio final
+    logger.info("--- Etapa 5: Aplicando regra de apropriação de receita ---")
+    df_resultado_final = pipeline_service.aplicar_apropriacao_de_receita(df_intermediario)
+    
+    # Etapa 6: Apresentar e salvar o resultado
+    logger.info("--- Etapa 6: Gerando saída ---")
+    logger.info("✅ Pipeline executado com sucesso.")
+    print("\n📊 Resultado final:\n")
+    print(df_resultado_final)
+    df_resultado_final.to_excel(RESULT_FILE_NAME, index=False)
+    logger.info(f"📁 Resultado exportado para '{RESULT_FILE_NAME}' com sucesso.")
 
 def main():
+    """Função principal para iniciar a execução do pipeline."""
     executar_pipeline()
-
 
 if __name__ == "__main__":
     main()

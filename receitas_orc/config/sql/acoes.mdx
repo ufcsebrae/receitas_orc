@@ -1,0 +1,28 @@
+WITH
+    MEMBER [Measures].[DespesaAjustado] AS
+        [Measures].[Valor de Despesa Orcado - Ajustado]
+SELECT
+    NON EMPTY
+        {
+            [Measures].[DespesaAjustado]
+        } ON COLUMNS,
+    NON EMPTY
+        (
+            -- Simplesmente removemos a função "Tail" daqui
+            Filter(
+                [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS,
+                NOT ISEMPTY([Measures].[DespesaAjustado])
+            ) *
+            [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS *
+            [Ação].[Ação].[Nome de Ação].MEMBERS
+        ) ON ROWS
+FROM
+    [FINANCEIRO]
+WHERE
+    (
+        [Sebrae].[Sebrae].[Descrição de Sebrae].&[26],
+        {
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202501] :
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202512]
+        }
+    )

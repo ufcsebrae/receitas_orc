@@ -1,3 +1,13 @@
+"""
+config_connections.py
+
+Define as configurações de conexão para os diversos bancos de dados
+e serviços utilizados pelo projeto 'receitas_orc'.
+Cada entrada no dicionário CONEXOES representa uma configuração de
+conexão específica, incluindo tipo (SQL, Azure SQL, MDX), servidor,
+banco de dados, driver, e autenticação.
+"""
+
 CONEXOES = {
     "SPSVSQL39_FINANCA": {
         "tipo": "sql",
@@ -24,11 +34,11 @@ CONEXOES = {
         "driver": "ODBC+Driver+17+for+SQL+Server",
         "authentication": "ActiveDirectoryInteractive"
     },
-    "default" : {
-    "tipo": "sql",
-    "servidor": "localhost",
-    "banco": "master",
-    "driver": "ODBC Driver 17 for SQL Server",
-    "trusted_connection": True
-}   
+    "default": {
+        "tipo": "sql",
+        "servidor": "localhost",
+        "banco": "master",
+        "driver": "ODBC Driver 17 for SQL Server",
+        "trusted_connection": True
+    }
 }

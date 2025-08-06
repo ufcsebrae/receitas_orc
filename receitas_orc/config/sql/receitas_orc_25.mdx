@@ -1,45 +1,24 @@
-WITH 
-    MEMBER [Measures].[ReceitaAjustado] AS 
+WITH
+    MEMBER [Measures].[ReceitaAjustado] AS
         [Measures].[Valor de Receita Iniciativa Orçado - Ajustado]
-        
-    MEMBER [Measures].[ReceitaExecutado] AS
-        [Measures].[Valor de Receita Iniciativa Executado]
-        
-    MEMBER [Measures].[DespesaAjustado] AS 
-        [Measures].[Valor de Despesa Orcado - Ajustado]
-        
-    MEMBER [Measures].[DespesaOriginal] AS 
-        [Measures].[Valor de Despesa Orcado - Original]
-        
-    MEMBER [Measures].[DespesaPactuado] AS 
-        [Measures].[Valor de Despesa Orcado - Pactuado]
-        
-    MEMBER [Measures].[DespesaExecutado] AS
-        [Measures].[Valor de Despesa Executado]
-
 SELECT
-    NON EMPTY 
-        { 
-            [Measures].[ReceitaAjustado], 
-            [Measures].[ReceitaExecutado],
-            [Measures].[DespesaAjustado],
-            [Measures].[DespesaOriginal],
-            [Measures].[DespesaPactuado],
-            [Measures].[DespesaExecutado]
-        } ON COLUMNS,
-
-    NON EMPTY
-        (
+    { [Measures].[ReceitaAjustado] } ON COLUMNS,
+    
+    -- Aplicamos o FILTER no final, apenas para a condição > 0, 
+    -- em um conjunto que já foi massivamente reduzido pela função NONEMPTY.
+    FILTER(
+        NONEMPTY(
             [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS *
             [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS *
             [Natureza Orçamentária].[Código Estruturado 4 nível].[Código Estruturado 4 nível].MEMBERS *
-            [Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].MEMBERS
-        ) ON ROWS
-
-FROM 
+            [Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].MEMBERS,
+            [Measures].[ReceitaAjustado]
+        ),
+        [Measures].[ReceitaAjustado] > 0
+    ) ON ROWS
+FROM
     [FINANCEIRO]
-
-WHERE 
+WHERE
     (
         [Sebrae].[Sebrae].[Descrição de Sebrae].&[26],
         {
