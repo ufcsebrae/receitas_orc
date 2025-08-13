@@ -75,6 +75,7 @@ consultas: Dict[str, Consulta] = {
         sql_filename="cc.sql",
         conexao="SPSVSQL39_HubDados"
         ),
+        
     "FatoFechamento": Consulta(
         titulo="Fato Fechamento",
         tipo="sql",

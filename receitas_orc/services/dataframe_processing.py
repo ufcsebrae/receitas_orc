@@ -9,6 +9,9 @@ normalização de texto.
 import pandas as pd
 import unicodedata
 import logging
+import numpy as np
+import os 
+from typing import Dict, Any, List
 
 # Configuração do logger para este módulo
 logger = logging.getLogger(__name__)
@@ -31,7 +34,7 @@ def renomear_colunas_padrao(df: pd.DataFrame) -> pd.DataFrame:
 
     colunas_renomeio = {
         '[PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].[MEMBER_CAPTION]': 'FotografiaPPA',
-        '[Iniciativa].[Iniciativas].[Iniciativa].[MEMBER_CAPTION]': 'INICIATIVA',
+        '[Iniciativa].[Iniciativas].[Iniciativa].[MEMBER_CAPTION]': 'PROJETO',
         '[Ação].[Ação].[Nome de Ação].[MEMBER_CAPTION]': 'ACAO',
         '[Natureza Orçamentária].[Código Estruturado 4 nível].[Código Estruturado 4 nível].[MEMBER_CAPTION]': 'CDGNVL4',
         '[Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].[MEMBER_CAPTION]': 'DESCNVL4',
@@ -74,3 +77,36 @@ def normalizar_texto(texto: str) -> str:
     
     return texto_limpo
 
+
+
+def classificar_projetos_em_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Enriquece o DataFrame de projetos com uma classificação baseada em
+    regras definidas em um arquivo de configuração externo (CSV).
+
+    Args:
+        df (pd.DataFrame): O DataFrame de entrada com a coluna 'PROJETO'.
+
+    Returns:
+        pd.DataFrame: O DataFrame original com a nova coluna 'TipoRegra'.
+    """
+    # --- Etapa 1: Carregar as regras do arquivo de configuração ---
+    caminho_regras = os.path.join(
+        os.path.dirname(__file__), '..', 'config', 'regras_classificacao.csv'
+    )
+    try:
+        regras_df = pd.read_csv(caminho_regras)
+    except FileNotFoundError:
+        logger.error(f"Arquivo de regras não encontrado em: {caminho_regras}")
+        df['TipoRegra'] = 'Erro: Arquivo de Regras Não Encontrado'
+        return df
+        
+    # --- Etapa 2: Aplicar as regras usando um merge ---
+    # pd.merge é a forma mais eficiente e "pandônica" de fazer essa junção.
+    # Usamos um 'left' join para manter todos os projetos originais.
+    df_classificado = pd.merge(df, regras_df, on='PROJETO', how='left')
+    
+    # --- Etapa 3: Definir um valor padrão para projetos não mapeados ---
+    df_classificado['TipoRegra'] = df_classificado['TipoRegra'].fillna('Outra Regra')
+    
+    return df_classificado

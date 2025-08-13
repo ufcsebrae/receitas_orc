@@ -12,7 +12,7 @@ import numpy as np
 # Importações do seu projeto
 from receitas_orc.config.mdx_setup import setup_mdx_environment
 from receitas_orc.services.global_services import selecionar_consulta_por_nome
-from receitas_orc.services.dataframe_processing import renomear_colunas_padrao
+from receitas_orc.services.dataframe_processing import renomear_colunas_padrao, classificar_projetos_em_dataframe
 from receitas_orc.services import pipeline_service
 
 # --- Configurações Globais ---
@@ -44,7 +44,9 @@ def executar_pipeline():
     df_acoes = resultados.get("acoes")
     df_cc = resultados.get("cc")
     df_FatoFechamento = resultados.get("FatoFechamento")
-    
+  
+    # Verifica se os DataFrames essenciais foram carregados corretamente
+    logger.info(f"DataFrames carregados: {list(resultados.keys())}")
     if any(df is None or df.empty for df in [df_orcadas, df_acoes, df_cc]):
         logger.error("Falha ao carregar DataFrames essenciais (orcadas, acoes, cc). Encerrando.")
         return
@@ -53,12 +55,7 @@ def executar_pipeline():
     df_orcadas = renomear_colunas_padrao(df_orcadas)
     df_acoes = renomear_colunas_padrao(df_acoes)
     df_cc = renomear_colunas_padrao(df_cc)
-    if df_FatoFechamento is not None:
-        # A nova consulta SQL para FatoFechamento já define os nomes corretos,
-        # então a renomeação pode não ser mais necessária para ele.
-        # df_FatoFechamento = renomear_colunas_padrao(df_FatoFechamento)
-        pass
-
+    
 
     # Etapa 2: Obter o mês do usuário
     logger.info("--- Etapa 2: Obtendo mês de referência ---")
@@ -71,6 +68,12 @@ def executar_pipeline():
     logger.info(f"--- Etapa 3: Filtrando dados para o mês {mes_selecionado} ---")
     df_despesas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_acoes, mes_selecionado, "Despesas")
     df_receitas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_orcadas, mes_selecionado, "Receitas")
+
+
+
+    #Etapa extra: Classificar projetos
+    df_receitas_do_mes = classificar_projetos_em_dataframe(df_receitas_do_mes)
+    print(df_receitas_do_mes.to_markdown(index=False))
     
     df_fechamento_do_mes = pd.DataFrame() # Inicia vazio
     if df_FatoFechamento is not None and not df_FatoFechamento.empty:
