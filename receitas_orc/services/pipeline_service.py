@@ -25,33 +25,61 @@ def obter_mes_do_usuario() -> int | None:
         logger.warning("Entrada de mês inválida.")
         return None
 
-def filtrar_dataframe_por_mes(df: pd.DataFrame, mes_input: int, nome_df: str) -> pd.DataFrame:
+
+def filtrar_dataframe_por_mes(df: pd.DataFrame, mes_input: int, nome_df: str, coluna_data: str) -> pd.DataFrame:
     """
-    Filtra um DataFrame pela coluna 'FotografiaPPA' e um mês (formato string).
+    Função genérica para filtrar um DataFrame por uma coluna de data e um mês.
+    Lida com colunas de data em formato string (ex: 'FotografiaPPA')
+    ou em formato datetime (ex: 'DATA').
+
+    Args:
+        df (pd.DataFrame): O DataFrame a ser filtrado.
+        mes_input (int): O número do mês (1 para Jan, 2 para Fev, etc.).
+        nome_df (str): O nome do DataFrame (para logging).
+        coluna_data (str): O nome da coluna que contém a informação de data.
     """
-    meses = {
+    meses_str_map = {
         0: 'Elb', 1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
         7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'
     }
-    mes_str = meses.get(mes_input)
     
-    if not mes_str:
-        logger.warning(f"Mês {mes_input} é inválido para filtrar {nome_df}.")
+    if not isinstance(mes_input, int) or mes_input not in meses_str_map:
+        logger.warning(f"Mês {mes_input} é inválido para filtrar {nome_df}. Retornando DataFrame vazio.")
+        return pd.DataFrame(columns=df.columns)
+    
+    if coluna_data not in df.columns:
+        logger.error(f"A coluna de data '{coluna_data}' não foi encontrada em '{nome_df}'.")
         return pd.DataFrame(columns=df.columns)
 
-    if 'FotografiaPPA' not in df.columns:
-        logger.error(f"Coluna 'FotografiaPPA' não encontrada em '{nome_df}'. Não é possível filtrar por mês.")
-        return df
-
-    logger.info(f"Filtrando '{nome_df}' pela coluna 'FotografiaPPA' para o mês: {mes_str}")
+    logger.info(f"Filtrando '{nome_df}' pela coluna '{coluna_data}' para o mês: {meses_str_map.get(mes_input)}")
     
-    filtro = df['FotografiaPPA'].str.contains(f"/{mes_str}", case=False, na=False)
-    df_filtrado = df[filtro]
+    df_temp = df.copy()
+    
+    # --- LÓGICA DE FILTRAGEM INTELIGENTE ---
+    # Primeiro, tentamos converter a coluna para datetime.
+    # 'coerce' transforma em NaT (Not a Time) o que não puder ser convertido.
+    series_data = pd.to_datetime(df_temp[coluna_data], errors='coerce')
+
+    if not series_data.isna().all():
+        # CASO 1: A coluna é (ou foi convertida para) datetime.
+        # Filtramos pelo atributo de mês do objeto datetime.
+        logger.debug(f"Coluna '{coluna_data}' detectada como tipo datetime. Filtrando pelo número do mês.")
+        filtro = series_data.dt.month == mes_input
+    else:
+        # CASO 2: A coluna não é datetime (ex: 'FotografiaPPA').
+        # Voltamos para a lógica de filtro por string.
+        logger.debug(f"Coluna '{coluna_data}' não é do tipo datetime. Filtrando como string.")
+        mes_str = meses_str_map.get(mes_input)
+        filtro = df_temp[coluna_data].astype(str).str.contains(f"/{mes_str}", case=False, na=False)
+    
+    df_filtrado = df_temp[filtro]
+    # --- FIM DA LÓGICA ---
     
     if df_filtrado.empty:
-        logger.warning(f"Nenhum dado encontrado para o mês '{mes_str}' em '{nome_df}'.")
+        logger.warning(f"Nenhum dado encontrado para o mês '{meses_str_map.get(mes_input)}' em '{nome_df}'.")
         
     return df_filtrado
+
 
 def agregar_despesas_por_acao(df_despesas_do_mes: pd.DataFrame) -> pd.DataFrame:
     """

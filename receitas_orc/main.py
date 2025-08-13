@@ -17,7 +17,7 @@ from receitas_orc.services import pipeline_service
 
 # --- Configurações Globais ---
 # ATENÇÃO: Substitua pelo caminho EXATO e REAL da sua DLL.
-# Use o método "Shift + Botão Direito > Copiar como caminho" para obter o caminho.
+
 DLL_PATH = r"C:\Microsoft.AnalysisServices.AdomdClient.dll"
 RESULT_FILE_NAME = "resultado_pipeline.xlsx"
 
@@ -56,7 +56,6 @@ def executar_pipeline():
     df_acoes = renomear_colunas_padrao(df_acoes)
     df_cc = renomear_colunas_padrao(df_cc)
     
-
     # Etapa 2: Obter o mês do usuário
     logger.info("--- Etapa 2: Obtendo mês de referência ---")
     mes_selecionado = pipeline_service.obter_mes_do_usuario()
@@ -66,24 +65,15 @@ def executar_pipeline():
 
     # Etapa 3: Filtrar os dados de origem pelo mês selecionado
     logger.info(f"--- Etapa 3: Filtrando dados para o mês {mes_selecionado} ---")
-    df_despesas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_acoes, mes_selecionado, "Despesas")
-    df_receitas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_orcadas, mes_selecionado, "Receitas")
-
-
+    df_despesas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_acoes, mes_selecionado, "Despesas","FotografiaPPA")
+    df_receitas_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_orcadas, mes_selecionado, "Receitas","FotografiaPPA")
+    df_fatofechamento_do_mes = pipeline_service.filtrar_dataframe_por_mes(df_FatoFechamento, mes_selecionado, "Fechamento","DATA")
 
     #Etapa extra: Classificar projetos
     df_receitas_do_mes = classificar_projetos_em_dataframe(df_receitas_do_mes)
     print(df_receitas_do_mes.to_markdown(index=False))
     
-    df_fechamento_do_mes = pd.DataFrame() # Inicia vazio
-    if df_FatoFechamento is not None and not df_FatoFechamento.empty:
-        # A função de filtro precisa ser ajustada para a coluna 'DATA' de FatoFechamento
-        logger.info(f"Filtrando 'FatoFechamento' pela coluna 'DATA' para o mês: {mes_selecionado}")
-        df_FatoFechamento['DATA'] = pd.to_datetime(df_FatoFechamento['DATA'], errors='coerce')
-        df_fechamento_do_mes = df_FatoFechamento[df_FatoFechamento['DATA'].dt.month == mes_selecionado]
-    else:
-        logger.warning("'FatoFechamento' não foi carregado ou está vazio. Pulando esta etapa.")
-
+    print(df_fatofechamento_do_mes.to_markdown(index=False))
     # Etapa 4: Processar os dados já filtrados
     logger.info("--- Etapa 4: Processando e juntando dados ---")
     df_acoes_agg = pipeline_service.agregar_despesas_por_acao(df_despesas_do_mes)

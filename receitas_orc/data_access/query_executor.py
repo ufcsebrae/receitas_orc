@@ -8,6 +8,11 @@ Ele lida com a lógica específica de execução para cada tipo de consulta.
 
 import pandas as pd
 import logging
+from typing import Callable
+
+    
+        # ... (resto do código)
+
 
 # Adiciona uma instância do logger para este módulo
 logger = logging.getLogger(__name__)
@@ -21,7 +26,7 @@ class CriadorDataFrame:
     bancos de dados (SQL Server, Azure SQL, MDX/Analysis Services).
     """
 
-    def __init__(self, funcao_conexao, conexao: str, consulta: str, tipo: str = "sql"):
+    def __init__(self, funcao_conexao: Callable, conexao: str, consulta: str, tipo: str = "sql"):
         """
         Inicializa o executor de consultas.
 

@@ -9,8 +9,9 @@ carregamento das referências .NET.
 
 import os
 import clr
+from typing import Tuple, Type
 
-def setup_mdx_environment(dll_path):
+def setup_mdx_environment(dll_path: str) -> Tuple[Type, Type]:
     """
     Configura o ambiente para uso do Pyadomd com a DLL do Analysis Services.
     Adiciona o diretório da DLL ao PATH do sistema e carrega as referências CLR.

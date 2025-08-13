@@ -53,34 +53,32 @@ class Consulta:
         return carregar_sql(os.path.join(SQL_DIR, self.sql_filename))
 
 # Dicionário contendo consultas SQL e MDX pré-definidas para uso
+
 consultas: Dict[str, Consulta] = {
-  
     "RECEITAS_ORCADAS_2025": Consulta(
         titulo="RECEITAS ORCADAS 2025 - SME - NA",
         tipo="mdx",
         sql_filename="receitas_orc_25.mdx",
         conexao="OLAP_SME"
-        ),
-
+    ),
     "acoes": Consulta(
         titulo="ACOES - SME - NA",
         tipo="mdx",
         sql_filename="acoes.mdx",
         conexao="OLAP_SME"
-        ),
-
+    ),
     "cc": Consulta(
         titulo="Centro de Custo",
         tipo="sql",
         sql_filename="cc.sql",
         conexao="SPSVSQL39_HubDados"
-        ),
-        
+    ),
     "FatoFechamento": Consulta(
         titulo="Fato Fechamento",
         tipo="sql",
         sql_filename="fatofechamento.sql",
         conexao="SPSVSQL39_FINANCA"
-        )
+    )
 }
+
 

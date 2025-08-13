@@ -12,9 +12,13 @@ import time
 import pandas as pd
 import traceback
 import os
-from datetime import datetime
-from urllib.parse import quote_plus
 import sqlalchemy
+
+from datetime import datetime
+from typing import Union, List, Dict
+from urllib.parse import quote_plus
+
+
 
 # Importações relativas para o projeto
 # O setup_mdx_environment não será mais chamado aqui diretamente no nível do módulo
@@ -30,7 +34,7 @@ logger = logging.getLogger("logger_financa")
 # dll_path = r"C:\Microsoft.AnalysisServices.AdomdClient.dll"
 # setup_mdx_environment(dll_path) # Esta chamada é removida daqui
 
-def funcao_conexao(nome_conexao: str):
+def funcao_conexao(nome_conexao: str) -> Union[sqlalchemy.engine.base.Connection, str]:
     """
     Retorna uma conexão SQLAlchemy com base nas informações da conexão especificada.
     Suporta conexões do tipo: 'sql', 'azure_sql' e 'mdx'.
@@ -91,7 +95,7 @@ def funcao_conexao(nome_conexao: str):
         raise ValueError("Tipo de conexão não suportado.")
 
 
-def selecionar_consulta_por_nome(titulo):
+def selecionar_consulta_por_nome(titulo: Union[str, List[str]]) -> Dict[str, pd.DataFrame]:
     """
     Executa uma ou mais consultas pelo nome lógico definido no dicionário `consultas`.
     Aceita:
