@@ -10,11 +10,10 @@ execução centralizada de consultas, além de funções para salvar dados.
 import logging
 import time
 import pandas as pd
-import traceback
 import os
 import sqlalchemy
 
-from datetime import datetime
+
 from typing import Union, List, Dict
 from urllib.parse import quote_plus
 
@@ -155,7 +154,7 @@ def selecionar_consulta_por_nome(titulo: Union[str, List[str]]) -> Dict[str, pd.
 
         except Exception as e:
             logger.error(f"❌ Erro na consulta '{nome_original}': {str(e)}")
-            logger.error(traceback.format_exc())
+            
             resultados[nome_original] = pd.DataFrame()
 
     return resultados
@@ -187,5 +186,5 @@ def salvar_no_financa(df: pd.DataFrame, table_name: str):
         logger.info(f"✅ Salvamento concluído na tabela '{table_name}' em {tempo:.2f} segundos.")
     except Exception as e:
         logger.error(f"❌ Erro ao salvar no SQL: {str(e)}")
-        logger.error(traceback.format_exc())
+        
 

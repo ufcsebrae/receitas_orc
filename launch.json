@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Módulo (receitas_orc.main)",
+            "type": "python",
+            "request": "launch",
+            "module": "receitas_orc.main",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

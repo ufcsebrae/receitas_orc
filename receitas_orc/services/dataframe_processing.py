@@ -9,9 +9,7 @@ normalização de texto.
 import pandas as pd
 import unicodedata
 import logging
-import numpy as np
 import os 
-from typing import Dict, Any, List
 
 # Configuração do logger para este módulo
 logger = logging.getLogger(__name__)
@@ -38,8 +36,9 @@ def renomear_colunas_padrao(df: pd.DataFrame) -> pd.DataFrame:
         '[Ação].[Ação].[Nome de Ação].[MEMBER_CAPTION]': 'ACAO',
         '[Natureza Orçamentária].[Código Estruturado 4 nível].[Código Estruturado 4 nível].[MEMBER_CAPTION]': 'CDGNVL4',
         '[Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].[MEMBER_CAPTION]': 'DESCNVL4',
-        '[Measures].[ReceitaAjustado]': 'VALOR_RECEITA',
-        '[Measures].[DespesaAjustado]': 'VALOR_DESPESA'
+        '[Measures].[ReceitaAjustado]': 'VALOR_RECEITA_AJUSTADO',
+        '[Measures].[DespesaAjustado]': 'VALOR_DESPESA_AJUSTADO',
+        
     }
     
     # Cria um dicionário apenas com as colunas que realmente existem no DataFrame
