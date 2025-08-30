@@ -14,6 +14,7 @@ import pandas as pd
 # Supondo que as classes de estratégia estejam neste caminho
 from receitas_orc.strategies.base_strategy import BaseApropriacaoStrategy
 from receitas_orc.strategies.csn_strategy import CSNStrategy
+from receitas_orc.strategies.csnTotal_strategy import CSNtotalStrategy
 from receitas_orc.strategies.convenio_strategy import ConvenioStrategy
 from receitas_orc.strategies.padrao_strategy import PadraoStrategy
 
@@ -26,6 +27,7 @@ STRATEGY_MAP: Dict[str, BaseApropriacaoStrategy] = {
     "CCTF": ConvenioStrategy(),
     "100% CSN": CSNStrategy(),
     "100% CONV": ConvenioStrategy(),
+    "100% CSN Total": CSNtotalStrategy(),
     "100% EB": PadraoStrategy()
 }
 DEFAULT_STRATEGY: BaseApropriacaoStrategy = PadraoStrategy()
