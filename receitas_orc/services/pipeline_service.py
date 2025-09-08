@@ -111,7 +111,7 @@ def _preparar_dados_base(
     
     df_receitas_pivot['Soma_Total'] = df_receitas_pivot[colunas_para_somar].sum(axis=1)
     print(df_receitas_pivot.info)
-    df_receitas_pivot.to_excel('resultado_final_v1.xlsx', sheet_name='Resultado', index=False)
+    ##df_receitas_pivot.to_excel('resultado_final_v1.xlsx', sheet_name='Resultado', index=False)
     
     print(df_exec_receitasAnual_do_mes.info())
     df_exec_receitasAnual_do_mes.to_excel('exec_receitasAnual_do_mes.xlsx', sheet_name='Resultado', index=False)

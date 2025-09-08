@@ -1,44 +1,47 @@
 WITH
-    -- Primeiro membro calculado: um apelido para a Receita
+    -- Membro para apelidar a medida de CSN Executada
+    MEMBER [Measures].[csnExecutado] AS
+        [Measures].[Valor Despesa Executado CSN]
+
+    -- Apelido para a Receita Ajustada
     MEMBER [Measures].[ReceitaAjustado] AS
         [Measures].[Valor de Receita Iniciativa Orçado - Ajustado]
-    
-    -- Segundo membro calculado: um apelido para a Despesa
+
+    -- Apelido para a Despesa Ajustada
     MEMBER [Measures].[DespesaAjustado] AS
         [Measures].[Valor de Despesa Planejado - Ajustado]
 
-    -- Terceiro membro: a divisão de Despesa/Receita, formatada como porcentagem
+    -- Cálculo da porcentagem, com tratamento para evitar divisão por zero
     MEMBER [Measures].[% Executado (R/D)] AS
         IIF(
-            [Measures].[DespesaAjustado] = 0 OR IsEmpty([Measures].[ReceitaAjustado]),
-            NULL, -- Se a receita for zero ou vazia, retorna nulo para não dar erro
+            [Measures].[DespesaAjustado] = 0 OR IsEmpty([Measures].[DespesaAjustado]),
+            NULL,
             [Measures].[ReceitaAjustado] / [Measures].[DespesaAjustado]
         ),
-        FORMAT_STRING = "Percent" -- Aplica a formatação de porcentagem ao resultado
+        FORMAT_STRING = "Percent"
 
 SELECT
-    -- Colocamos TODAS as três medidas que queremos ver nas colunas
-    { 
-        [Measures].[ReceitaAjustado], 
-        [Measures].[DespesaAjustado], 
-        [Measures].[% Executado (R/D)] 
+    -- Colunas: As medidas que queremos exibir
+    {
+        [Measures].[csnExecutado],
+        [Measures].[ReceitaAjustado],
+        [Measures].[DespesaAjustado],
+        [Measures].[% Executado (R/D)]
     } ON COLUMNS,
 
-    -- A lógica de filtro nas linhas continua a mesma, pois ela já traz
-    -- as linhas que têm receita OU despesa, que são a base do cálculo.
-    FILTER(
-        NONEMPTY(
-            [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS *
-            [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS,
-            { [Measures].[ReceitaAjustado], [Measures].[DespesaAjustado] }
-        ),
-        [Measures].[ReceitaAjustado] > 0 OR [Measures].[DespesaAjustado] > 0
+    -- Linhas: Combinações de PPA, Iniciativa e Mês que não estejam vazias.
+    -- A verificação de "vazio" agora é feita contra as medidas que estão nas COLUNAS.
+    NON EMPTY (
+        [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS *
+        [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS *
+        [Tempo].[Mês].[Número Mês].MEMBERS
     ) ON ROWS
 
 FROM
     [FINANCEIRO]
 
 WHERE
+    -- Cláusula de filtro (slicer)
     (
         [Sebrae].[Sebrae].[Descrição de Sebrae].&[26],
         {
