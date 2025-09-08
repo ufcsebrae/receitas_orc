@@ -89,6 +89,8 @@ def _preparar_dados_base(
     df_despesas_classificadas: pd.DataFrame,
     df_cc: pd.DataFrame,
     df_fechamento_do_mes: pd.DataFrame,
+    df_exec_receitasAnual_do_mes: pd.DataFrame,
+    df_plan_receitasDespesas_SME: pd.DataFrame,
     df_fechamento_anual: pd.DataFrame
 ) -> tuple[pd.DataFrame, list[str]]:
     """Prepara, agrega e une todos os DataFrames de entrada em uma base única para análise."""
@@ -110,6 +112,15 @@ def _preparar_dados_base(
     df_receitas_pivot['Soma_Total'] = df_receitas_pivot[colunas_para_somar].sum(axis=1)
     print(df_receitas_pivot.info)
     df_receitas_pivot.to_excel('resultado_final_v1.xlsx', sheet_name='Resultado', index=False)
+    
+    print(df_exec_receitasAnual_do_mes.info())
+    df_exec_receitasAnual_do_mes.to_excel('exec_receitasAnual_do_mes.xlsx', sheet_name='Resultado', index=False)
+
+    df_filtrado_sme = df_plan_receitasDespesas_SME[df_plan_receitasDespesas_SME['PROJETO'].isin(['ALI Rural','SP Agente Local de Inovação (ALI) - Produtividade'])]
+
+    print(df_filtrado_sme.info())
+
+    df_filtrado_sme.to_excel('plan_receitasDespesas_SME.xlsx', sheet_name='Resultado', index=False)
 
 
     logger.info("2. Agregando despesas...")
@@ -124,6 +135,9 @@ def _preparar_dados_base(
     df_final = pd.merge(df_base, df_receitas_pivot.reset_index(), on='PROJETO', how='left')
 
     df_final['Coeficiente_DespesaReceita'] = df_final['Soma_Total']/df_final['TOTAL_DESPESA_PROJETO']
+
+    print(df_fechamento_do_mes.info())
+    print(df_fechamento_anual.info())    
 
     df_despesas_mensais  = df_fechamento_do_mes.groupby('CC').agg(
         VALOR_DESPESA_AJUSTADO=('VALOR', 'sum')
@@ -227,6 +241,8 @@ def aplicar_estrategias_de_apropriacao(
     df_despesas_classificadas: pd.DataFrame,
     df_cc: pd.DataFrame,
     df_fechamento_do_mes: pd.DataFrame,
+    df_exec_receitasAnual_do_mes: pd.DataFrame,
+    df_plan_receitasDespesas_SME: pd.DataFrame,
     df_fechamento_anual: pd.DataFrame
 ) -> pd.DataFrame:
     """Orquestra o pipeline completo de apropriação de despesas."""
@@ -234,8 +250,13 @@ def aplicar_estrategias_de_apropriacao(
     
     # 1. Preparar dados
     df_preparado = _preparar_dados_base(
-        df_receitas_classificadas, df_despesas_classificadas, df_cc,
-        df_fechamento_do_mes, df_fechamento_anual
+        df_receitas_classificadas, 
+        df_despesas_classificadas, 
+        df_cc,
+        df_fechamento_do_mes,
+        df_exec_receitasAnual_do_mes,
+        df_plan_receitasDespesas_SME,
+        df_fechamento_anual
     )
     
     # 2. Executar estratégias

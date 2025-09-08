@@ -1,0 +1,48 @@
+WITH
+    -- Primeiro membro calculado: um apelido para a Receita
+    MEMBER [Measures].[ReceitaAjustado] AS
+        [Measures].[Valor de Receita Iniciativa Orçado - Ajustado]
+    
+    -- Segundo membro calculado: um apelido para a Despesa
+    MEMBER [Measures].[DespesaAjustado] AS
+        [Measures].[Valor de Despesa Planejado - Ajustado]
+
+    -- Terceiro membro: a divisão de Despesa/Receita, formatada como porcentagem
+    MEMBER [Measures].[% Executado (R/D)] AS
+        IIF(
+            [Measures].[DespesaAjustado] = 0 OR IsEmpty([Measures].[ReceitaAjustado]),
+            NULL, -- Se a receita for zero ou vazia, retorna nulo para não dar erro
+            [Measures].[ReceitaAjustado] / [Measures].[DespesaAjustado]
+        ),
+        FORMAT_STRING = "Percent" -- Aplica a formatação de porcentagem ao resultado
+
+SELECT
+    -- Colocamos TODAS as três medidas que queremos ver nas colunas
+    { 
+        [Measures].[ReceitaAjustado], 
+        [Measures].[DespesaAjustado], 
+        [Measures].[% Executado (R/D)] 
+    } ON COLUMNS,
+
+    -- A lógica de filtro nas linhas continua a mesma, pois ela já traz
+    -- as linhas que têm receita OU despesa, que são a base do cálculo.
+    FILTER(
+        NONEMPTY(
+            [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS *
+            [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS,
+            { [Measures].[ReceitaAjustado], [Measures].[DespesaAjustado] }
+        ),
+        [Measures].[ReceitaAjustado] > 0 OR [Measures].[DespesaAjustado] > 0
+    ) ON ROWS
+
+FROM
+    [FINANCEIRO]
+
+WHERE
+    (
+        [Sebrae].[Sebrae].[Descrição de Sebrae].&[26],
+        {
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202501] :
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202512]
+        }
+    )

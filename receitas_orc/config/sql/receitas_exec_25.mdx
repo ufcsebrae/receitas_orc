@@ -1,0 +1,30 @@
+WITH
+    MEMBER [Measures].[Executado_Receita_ano] AS
+       [Measures].[Valor de Receita Iniciativa Executado]
+SELECT
+
+    {
+        [Measures].[Executado_Receita_ano]
+
+    } ON COLUMNS,
+    
+    FILTER(
+        NONEMPTY(
+            [PPA].[PPA com Fotografia].[Descrição de PPA com Fotografia].MEMBERS *
+            [Iniciativa].[Iniciativas].[Iniciativa].MEMBERS *
+            [Natureza Orçamentária].[Código Estruturado 4 nível].[Código Estruturado 4 nível].MEMBERS *
+            [Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].MEMBERS,
+            [Measures].[Executado_Receita_ano] 
+        ),
+        [Measures].[Executado_Receita_ano] > 0 
+    ) ON ROWS
+FROM
+    [FINANCEIRO]
+WHERE
+    (
+        [Sebrae].[Sebrae].[Descrição de Sebrae].&[26],
+        {
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202501] :
+            [Tempo].[Ano e Mês].[Número Ano e Mês].&[202512]
+        }
+    )

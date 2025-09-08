@@ -39,18 +39,26 @@ def executar_pipeline():
         return
     
     logger.info("--- Etapa 1: Carregando dados brutos ---")
-    resultados = selecionar_consulta_por_nome("RECEITAS_ORCADAS_2025, cc, acoes, FatoFechamento")
+    resultados = selecionar_consulta_por_nome("RECEITAS_ORCADAS_2025, cc, acoes, FatoFechamento,RECEITAS_EXEC_2025,RECEITAS_DESPESAS_PERCENT")
     df_orcadas = resultados.get("RECEITAS_ORCADAS_2025")
     df_acoes = resultados.get("acoes")
     df_cc = resultados.get("cc")
     df_FatoFechamento_original = resultados.get("FatoFechamento")
-    if any(df is None or df.empty for df in [df_orcadas, df_acoes, df_cc]):
+    df_exec_receitas = resultados.get("RECEITAS_EXEC_2025")
+    df_plan_receitasDespesas_SME = resultados.get("RECEITAS_DESPESAS_PERCENT")
+
+
+
+
+    if any(df is None or df.empty for df in [df_orcadas, df_acoes, df_cc,df_FatoFechamento_original,df_exec_receitas]):
         logger.error("Falha ao carregar DataFrames essenciais (orcadas, acoes, cc). Encerrando.")
         return
 
     logger.info("Renomeando colunas...")
     df_orcadas = renomear_colunas_padrao(df_orcadas)
     df_acoes = renomear_colunas_padrao(df_acoes)
+    df_exec_receitas = renomear_colunas_padrao(df_exec_receitas)
+    df_plan_receitasDespesas_SME = renomear_colunas_padrao(df_plan_receitasDespesas_SME)
 
     logger.info("--- Etapa 2: Obtendo mês de referência ---")
     mes_selecionado = pipeline_service.obter_mes_do_usuario()
@@ -60,13 +68,17 @@ def executar_pipeline():
     logger.info(f"--- Etapa 3: Filtrando dados para o mês {mes_selecionado} ---")
     df_despesas_do_mes = pipeline_service.filtrar_por_mes_string(df_acoes, mes_selecionado, "Despesas", "FotografiaPPA")
     df_receitas_do_mes = pipeline_service.filtrar_por_mes_string(df_orcadas, mes_selecionado, "Receitas", "FotografiaPPA")
+    df_exec_receitasAnual_do_mes = pipeline_service.filtrar_por_mes_string(df_exec_receitas, mes_selecionado, "Receitas_exec_2025", "FotografiaPPA")
     
     df_fechamento_do_mes = pd.DataFrame()
     df_fechamento_anual = pd.DataFrame()
+
+
     if df_FatoFechamento_original is not None and not df_FatoFechamento_original.empty:
         df_FatoFechamento_original['DATA'] = pd.to_datetime(df_FatoFechamento_original['DATA'])
         df_fechamento_do_mes = pipeline_service.filtrar_por_mes_datetime(df_FatoFechamento_original, mes_selecionado, "FatoFechamento", "DATA")
-        df_fechamento_anual = df_FatoFechamento_original[df_FatoFechamento_original['DATA'].dt.month <= mes_selecionado]
+        condicao_anual = df_FatoFechamento_original['DATA'].dt.month <= mes_selecionado
+        df_fechamento_anual = df_FatoFechamento_original[condicao_anual].copy()
 
     logger.info("--- Etapa 4: Classificando projetos ---")
     df_receitas_classificadas = classificar_projetos_em_dataframe(df_receitas_do_mes)
@@ -78,6 +90,8 @@ def executar_pipeline():
         df_despesas_classificadas,
         df_cc,
         df_fechamento_do_mes,
+        df_exec_receitasAnual_do_mes,
+        df_plan_receitasDespesas_SME,
         df_fechamento_anual
     )
     

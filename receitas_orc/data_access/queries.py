@@ -61,6 +61,18 @@ consultas: Dict[str, Consulta] = {
         sql_filename="receitas_orc_25.mdx",
         conexao="OLAP_SME"
     ),
+    "RECEITAS_EXEC_2025": Consulta(
+        titulo="RECEITAS EXECUTADAS 2025 - SME - NA",
+        tipo="mdx",
+        sql_filename="receitas_exec_25.mdx",
+        conexao="OLAP_SME"
+    ),
+    "RECEITAS_DESPESAS_PERCENT": Consulta(
+        titulo="RECEITAS DESPESAS PLANEJADAS (%) 2025 - SME - NA",
+        tipo="mdx",
+        sql_filename="receitas_despesas_percent.mdx",
+        conexao="OLAP_SME"
+    ),
     "acoes": Consulta(
         titulo="ACOES - SME - NA",
         tipo="mdx",

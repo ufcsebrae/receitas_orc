@@ -38,6 +38,8 @@ def renomear_colunas_padrao(df: pd.DataFrame) -> pd.DataFrame:
         '[Natureza Orçamentária].[Descrição de Natureza 4 nível].[Descrição de Natureza 4 nível].[MEMBER_CAPTION]': 'DESCNVL4',
         '[Measures].[ReceitaAjustado]': 'VALOR_RECEITA_AJUSTADO',
         '[Measures].[DespesaAjustado]': 'VALOR_DESPESA_AJUSTADO',
+        '[Measures].[Executado_Receita_ano]': 'VALOR_EXECUTADO_RECEITA_ANO',
+
         
     }
     
